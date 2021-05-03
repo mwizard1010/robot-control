@@ -8,11 +8,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import clear_output
 
-from agent.DiscreteAgent import FrozenLakeAgent
+from agent.ContinuousAgent import CartPoleAgentCont
 from util.DataFiles import DataFiles
 from util.Agent import select_agent
 
-resultsFolder = 'results/discrete/tests/'
+resultsFolder = 'results/continuos/tests/'
 # Create target Directory if don't exist
 if not os.path.exists(resultsFolder):
     os.makedirs(resultsFolder)
@@ -45,6 +45,7 @@ def plotRewards(filename):
     plt.ylabel('Reward')
 
     my_axis = plt.gca()
+    plt.savefig(resultsFolder + filename + '.png')
 
     plt.show()
 
@@ -62,9 +63,8 @@ def trainAgent(tries, episodes, teacherAgent=None, feedback=0):
 
 
 
-        agent = FrozenLakeAgent(epsilon=0.9, learning_rate=0.01)
+        agent = CartPoleAgentCont()
         rewards = agent.train(episodes, teacherAgent, feedback)
-        suffix = '_i' + str(i) + '_r' + str(rewards)
         if(teacherAgent is None):
             agentPath = resultsFolder+'/agentRL'+ str(i) +'.npy'
         else:
@@ -78,11 +78,9 @@ def trainAgent(tries, episodes, teacherAgent=None, feedback=0):
 if __name__ == "__main__":
     print("Interactive RL for Env is running ... ")
     tries = 2
-    episodes = 10000
-    feedbackProbability = 0.2
+    episodes = 50
+    feedbackProbability = 0.3
 
-
-    # agent = FrozenLakeAgent()
     # play(agent, num_episodes=5)
 
     #Training with autonomous RL    
@@ -90,7 +88,7 @@ if __name__ == "__main__":
 
     #sample agent
 
-    agent = FrozenLakeAgent()
+    agent = CartPoleAgentCont()
     teacherAgent, number, teacherPath = select_agent(agent, resultsFolder)
     print('Using agent:', number, teacherPath)
 

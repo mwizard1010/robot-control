@@ -11,9 +11,8 @@ from IPython.display import clear_output
 class FrozenLakeAgent:
 
     def __init__(self, 
-            max_steps=200, learning_rate=0.1,
-            gamma=0.9, epsilon=1.0, decay_rate= 0.01):
-
+            max_steps=50, learning_rate=0.85,
+            gamma=0.95, epsilon=1.0, decay_rate= 0.005):
         self.env = gym.make("FrozenLake-v0", is_slippery=False, map_name="8x8")
         state_num = self.env.observation_space.n  # 8x8 ==> 64
         actions_num = self.env.action_space.n  # four actions
@@ -60,6 +59,7 @@ class FrozenLakeAgent:
         #exploitation
         else:
             return np.random.choice(np.where(self.Q[state,:]== np.max(self.Q[state,:]))[0])
+            # return np.argmax(self.Q[state,:])
 
     
 
@@ -95,7 +95,7 @@ class FrozenLakeAgent:
 
 
             rewards.append(reward)
-            avg_reward.append(np.mean(rewards))
+            avg_reward.append(np.mean(rewards[-100:]))
         return avg_reward
 
     def save(self, filename):
