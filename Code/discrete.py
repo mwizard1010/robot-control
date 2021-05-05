@@ -44,7 +44,7 @@ def plotRewards(filename):
     plt.xlabel('Episodes')
     plt.ylabel('Reward')
 
-    my_axis = plt.gca()
+    plt.savefig(resultsFolder + filename + '.png')
 
     plt.show()
 
