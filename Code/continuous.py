@@ -22,35 +22,6 @@ else:
 
 files = DataFiles()
 
-def plotRewards(filename):
-    dataRL = np.genfromtxt(resultsFolder + filename + 'RL.csv', delimiter=',')
-    dataIRL = np.genfromtxt(resultsFolder + filename + 'IRL.csv', delimiter=',')
-    meansRL = np.mean(dataRL, axis=0)
-    meansIRL = np.mean(dataIRL, axis=0)
-    print('meansRL', np.average(meansRL), np.max(meansRL), np.min(meansRL), dataRL.shape)
-    print('meansIRL', np.average(meansIRL), np.max(meansIRL), np.min(meansIRL), dataIRL.shape)
-
-    plt.rc('xtick', labelsize=12)
-    plt.rc('ytick', labelsize=12)
-
-    plt.figure('Collected reward')
-    plt.suptitle('Collected reward')
-
-    plt.plot(meansIRL, label = 'Average reward IRL', linestyle = '--', color =  'r')
-    plt.plot(meansRL, label = 'Average reward RL', linestyle = '--', color = 'y' )
-
-
-    plt.legend(loc=4,prop={'size':12})
-    plt.xlabel('Episodes')
-    plt.ylabel('Reward')
-
-    my_axis = plt.gca()
-    plt.savefig(resultsFolder + filename + '.png')
-
-    plt.show()
-
-#end of plotRewards method
-
 def trainAgent(tries, episodes, teacherAgent=None, feedback=0):
     if teacherAgent == None:
         filenameRewards = resultsFolder + 'rewardsRL.csv'
@@ -76,27 +47,30 @@ def trainAgent(tries, episodes, teacherAgent=None, feedback=0):
     
     
 if __name__ == "__main__":
-    print("Interactive RL for Env is running ... ")
-    tries = 2
-    episodes = 50
-    feedbackProbability = 0.3
-
-    # play(agent, num_episodes=5)
-
-    #Training with autonomous RL    
-    trainAgent(tries, episodes)
-
-    #sample agent
-
     agent = CartPoleAgentCont()
-    teacherAgent, number, teacherPath = select_agent(agent, resultsFolder)
-    print('Using agent:', number, teacherPath)
+    print(agent.state_shape)
 
-    if(teacherAgent != None):
-        # Training with interactive RL
-        print('IRL is now training the learner agent with interactive RL')
-        learnerAgent = trainAgent(tries, episodes, teacherAgent, feedbackProbability)
+    # print("Interactive RL for Env is running ... ")
+    # tries = 2
+    # episodes = 100
+    # feedbackProbability = 0.3
 
-        plotRewards("rewards")
+    # # play(agent, num_episodes=5)
 
-    print("Finish")
+    # #Training with autonomous RL    
+    # trainAgent(tries, episodes)
+
+    # #sample agent
+
+    # agent = CartPoleAgentCont()
+    # teacherAgent, number, teacherPath = select_agent(agent, resultsFolder)
+    # print('Using agent:', number, teacherPath)
+
+    # if(teacherAgent != None):
+    #     # Training with interactive RL
+    #     print('IRL is now training the learner agent with interactive RL')
+    #     learnerAgent = trainAgent(tries, episodes, teacherAgent, feedbackProbability)
+
+    # print("Finish")
+
+

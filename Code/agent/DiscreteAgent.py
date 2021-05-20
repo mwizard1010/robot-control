@@ -59,9 +59,6 @@ class FrozenLakeAgent:
         #exploitation
         else:
             return np.random.choice(np.where(self.Q[state,:]== np.max(self.Q[state,:]))[0])
-            # return np.argmax(self.Q[state,:])
-
-    
 
     def choose_action(self, state, teacherAgent = None, feedbackProbability = 0):
         if (np.random.rand() < feedbackProbability):

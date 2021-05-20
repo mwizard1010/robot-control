@@ -22,16 +22,15 @@ class CartPoleAgentCont:
             state_shape = None):
         self.env = gym.make("CartPole-v1")
 
-        # state_num = self.env.observation_space.n  # 8x8 ==> 64
         if(state_shape != None):
             self.state_shape = state_shape
         else: 
-            self.state_shape = self.env.observation_space.shape
-        self.replay_buffer = deque(maxlen=5000)
+            self.state_shape = self.observation_space().shape
+        self.memory = deque(maxlen=5000)
         self.batch_size = 32
-        self.actions_num = self.env.action_space.n  # four actions
+        self.actions_num = self.action_space().n  # 2 actions
 
-        self.envLimits = self.env.observation_space.high
+        self.envLimits = self.observation_space().high
         self.envLimits[0] = 2.4
         self.envLimits[2] = math.radians(50)
 
@@ -44,7 +43,7 @@ class CartPoleAgentCont:
         # Interactive
         self.feedbackAmount = 0
 
-        #continuous
+        #model & target model
         self.main_network = self.build_network()
         self.target_network = self.build_network()
 
@@ -54,6 +53,12 @@ class CartPoleAgentCont:
         #copy the weights of the main network to the target network
         self.target_network.set_weights(self.main_network.get_weights())
     
+    def observation_space(self):
+        return self.env.observation_space
+
+    def action_space(self):
+        return self.env.action_space
+
     def build_network(self):
         model = Sequential()
         model.add(Dense(20, input_shape=self.state_shape,  activation='relu'))
@@ -64,8 +69,8 @@ class CartPoleAgentCont:
 
         return model
 
-    def store_transistion(self, state, action, reward, next_state, done):
-        self.replay_buffer.append((state, action, reward, next_state, done))
+    def memorize(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
 
     def test(self, episode = 100):
         rewards = []
@@ -110,7 +115,6 @@ class CartPoleAgentCont:
     def preprocess_state(self, state):
 
         state = np.reshape(state, list((1,) + self.state_shape))
-        return state
 
         #crop and resize the image
         # image = state[1:176:2, ::2]
@@ -130,14 +134,15 @@ class CartPoleAgentCont:
         return state
 
     def updatePolicy(self):
-        if len(self.replay_buffer) > self.batch_size:
-            self.trainNetwork(self.batch_size)
+        if len(self.memory) < self.batch_size:
+            return # do nothing
+        self.trainNetwork(self.batch_size)
         return 
     
     def trainNetwork(self, batch_size):
 
         #sample a mini batch of transition from the replay buffer
-        minibatch = random.sample(self.replay_buffer, batch_size)
+        minibatch = random.sample(self.memory, batch_size)
         
         #compute the Q value using the target network
         for state, action, reward, next_state, done in minibatch:
@@ -178,8 +183,7 @@ class CartPoleAgentCont:
                 action = self.choose_action(state, teacherAgent, feedbackProbability)
                 next_state, r, done, _ = self.env.step(action)
                 
-
-                self.store_transistion(state, action, reward, next_state, done)
+                self.memorize(state, action, reward, next_state, done)
                 state = next_state
 
                 # r = self.rewardFunction(state)

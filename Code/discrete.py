@@ -1,12 +1,7 @@
-"""
-@author: Hung Son
-"""
-
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython.display import clear_output
 
 from agent.DiscreteAgent import FrozenLakeAgent
 from util.DataFiles import DataFiles
@@ -81,11 +76,7 @@ if __name__ == "__main__":
     episodes = 10000
     feedbackProbability = 0.2
 
-
-    # agent = FrozenLakeAgent()
-    # play(agent, num_episodes=5)
-
-    #Training with autonomous RL    
+    #Training with discrete RL    
     trainAgent(tries, episodes)
 
     #sample agent
@@ -98,7 +89,5 @@ if __name__ == "__main__":
         # Training with interactive RL
         print('IRL is now training the learner agent with interactive RL')
         learnerAgent = trainAgent(tries, episodes, teacherAgent, feedbackProbability)
-
-        plotRewards("rewards")
 
     print("Finish")
