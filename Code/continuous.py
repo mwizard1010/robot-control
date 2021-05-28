@@ -4,35 +4,29 @@
 
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-from IPython.display import clear_output
-
+import gym
 from agent.ContinuousAgent import CartPoleAgentCont
-from util.DataFiles import DataFiles
+from util.DataFiles import save
 from util.Agent import select_agent
+import random
 
-resultsFolder = 'results/continuos/tests/'
+
+
+resultsFolder = 'results/continuous/tests/'
 # Create target Directory if don't exist
 if not os.path.exists(resultsFolder):
     os.makedirs(resultsFolder)
     print("Directory " , resultsFolder ,  " Created ")
-else:
-    input("Output folder already exist. Press Enter to overwrite...")
 
-files = DataFiles()
 
 def trainAgent(tries, episodes, teacherAgent=None, feedback=0):
     if teacherAgent == None:
-        filenameRewards = resultsFolder + 'rewardsRL.csv'
+        filenameRewards = resultsFolder + 'rewardsRL'
     else:
-        filenameRewards = resultsFolder + 'rewardsIRL.csv'
+        filenameRewards = resultsFolder + 'rewardsIRL'
 
-    files.createFile(filenameRewards)
     for i in range(tries):
         print('Training agent number: ' + str(i+1))
-
-
 
         agent = CartPoleAgentCont()
         rewards = agent.train(episodes, teacherAgent, feedback)
@@ -42,35 +36,37 @@ def trainAgent(tries, episodes, teacherAgent=None, feedback=0):
             agentPath = resultsFolder+'/agentIRL'+ str(i) +'.npy'
 
         agent.save(agentPath)
-        files.addFloatToFile(filenameRewards, rewards)
+        save(rewards, filenameRewards + str(i) +'.csv')
     return agent
-    
+
+def trainAdvisor(agent_num):
+    episodes = 300
+    trainAgent(agent_num, episodes)
     
 if __name__ == "__main__":
+    episodes = 300
+    feedbackProbability = 0.3
+    agent_num = 3
+    random.seed(0)
+
+    #Reinforcement learning
+    # print("RL")
+    # trainAgent(1, episodes)
+
+
+    #interactive RL
+    # print("Advisor train ... ")
+    # trainAdvisor(agent_num)
+
+    #sample agent
     agent = CartPoleAgentCont()
-    print(agent.state_shape)
+    teacherAgent, number, teacherPath = select_agent(agent, resultsFolder, agent_num)
+    print('Using agent:', number, teacherPath)
 
-    # print("Interactive RL for Env is running ... ")
-    # tries = 2
-    # episodes = 100
-    # feedbackProbability = 0.3
-
-    # # play(agent, num_episodes=5)
-
-    # #Training with autonomous RL    
-    # trainAgent(tries, episodes)
-
-    # #sample agent
-
-    # agent = CartPoleAgentCont()
-    # teacherAgent, number, teacherPath = select_agent(agent, resultsFolder)
-    # print('Using agent:', number, teacherPath)
-
-    # if(teacherAgent != None):
-    #     # Training with interactive RL
-    #     print('IRL is now training the learner agent with interactive RL')
-    #     learnerAgent = trainAgent(tries, episodes, teacherAgent, feedbackProbability)
+    if(teacherAgent != None):
+        # Training with interactive RL
+        print('IRL is now training the learner agent with interactive RL')
+        learnerAgent = trainAgent(3, episodes, teacherAgent, feedbackProbability)
 
     # print("Finish")
-
 

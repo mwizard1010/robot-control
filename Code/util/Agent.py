@@ -3,7 +3,6 @@ import gym
 import re
 import glob
 import numpy as np
-import matplotlib.pyplot as plt
 
 # sort helping
 def atoi(text):
@@ -17,21 +16,21 @@ def natural_keys(text):
     '''
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
-def select_agent(agent, agents_folder):
+def select_agent(agent, agents_folder, agent_num):
     # MIN_REWARD = 495
-    MIN_REWARD = 0.5
+    MIN_REWARD = 30
     log_file = open(agents_folder + '/log.txt', 'w')
 
-    epochs_num = 500
-    dataRL = np.genfromtxt(agents_folder + '/rewardsRL.csv', delimiter=',')
+    epochs_num = 100
 
-    stdRL = np.std(dataRL, axis=1)
+    
 
-    sorted_std = np.argsort(stdRL)
-
-    agentsWeights = glob.glob(agents_folder + '/agentRL*')
-    agentsWeights.sort(key=natural_keys)
-    for i in sorted_std:
+    agentsWeights = []
+    for i in range(agent_num):
+        agentsWeights.append(agents_folder + 'agentRL' + str(i) + '.npy')
+    # agentsWeights.sort(key=natural_keys)
+    print(agentsWeights)
+    for i in range(agent_num):
         print('Checking', agentsWeights[i])
         agent.load(agentsWeights[i])
         rewards = agent.test(epochs_num)
