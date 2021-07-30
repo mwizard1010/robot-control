@@ -18,7 +18,7 @@ def natural_keys(text):
 
 def select_agent(agent, agents_folder, agent_num):
     # MIN_REWARD = 495
-    MIN_REWARD = 30
+    MIN_REWARD = 40
     log_file = open(agents_folder + '/log.txt', 'w')
 
     epochs_num = 100
@@ -28,17 +28,19 @@ def select_agent(agent, agents_folder, agent_num):
     agentsWeights = []
     for i in range(agent_num):
         agentsWeights.append(agents_folder + 'agentRL' + str(i) + '.npy')
-    # agentsWeights.sort(key=natural_keys)
+
     print(agentsWeights)
-    for i in range(agent_num):
-        print('Checking', agentsWeights[i])
-        agent.load(agentsWeights[i])
-        rewards = agent.test(epochs_num)
-        print(np.mean(rewards))
-        if np.mean(rewards) > MIN_REWARD:
-            log_file.write('Using agent: ' + str(i) + ' ' + agentsWeights[i])
-            log_file.close()
-            return agent, i, agentsWeights[i]
-    log_file.write('None Found')
-    log_file.close()
+    agent.load(agentsWeights[0])
+    return agent, 0, agentsWeights[0]
+    # for i in range(agent_num):
+    #     print('Checking', agentsWeights[i])
+    #     agent.load(agentsWeights[i])
+    #     rewards = agent.test(epochs_num)
+    #     print(np.mean(rewards))
+    #     if np.mean(rewards) > MIN_REWARD:
+    #         log_file.write('Using agent: ' + str(i) + ' ' + agentsWeights[i])
+    #         log_file.close()
+    #         return agent, i, agentsWeights[i]
+    # log_file.write('None Found')
+    # log_file.close()
     return None, None, None
