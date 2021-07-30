@@ -15,7 +15,8 @@ from tensorflow.keras.models import Sequential
 class CartPoleAgentCont:
 
     def __init__(self,
-            max_steps=60, gamma=0.99, 
+            max_steps=200, reward_threshold = 195,
+            gamma=0.99, 
             epsilon=1.0, epsilon_min=0.01, epsilon_log_decay=0.995, 
             alpha = 0.01):
         self.env = gym.make("CartPole-v0")
@@ -23,13 +24,12 @@ class CartPoleAgentCont:
         self.memory = deque(maxlen=50000)
         self.batch_size = 64
         self.max_steps = max_steps
+        self.reward_threshold = reward_threshold
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_log_decay
-
-        self.training_stop = 55
 
         # Interactive
         self.feedbackAmount = 0
@@ -73,10 +73,17 @@ class CartPoleAgentCont:
         else:
             return np.argmax(self.main_network.predict(state))
 
-    def choose_action(self, state, epsilon, teacherAgent = None, feedbackProbability = 0):
+    def choose_action(self, state, epsilon, teacherAgent = None, feedbackProbability = 0, feedbackAccuracy = 0):
         if (np.random.rand() < feedbackProbability):
             #get advice
-            action = np.argmax(teacherAgent.main_network.predict(state)[0])
+            trueAction = np.argmax(teacherAgent.main_network.predict(state)[0])
+            if (np.random.rand() < feedbackAccuracy):
+                action = trueAction
+            else:
+                while True: 
+                    action = self.env.action_space.sample()
+                    if  action != trueAction:
+                        break
             self.feedbackAmount += 1
         else:
             action = self.normal_action(state, epsilon)
@@ -102,9 +109,9 @@ class CartPoleAgentCont:
         targets = []
 
         for state, action, reward, next_state, done in minibatch:
-            target = self.target_network.predict(next_state)
             if not done:
-                target_Q = (reward + self.gamma * np.amax(target[0]))
+                target = self.target_network.predict(next_state)
+                target_Q = (reward + self.gamma * np.max(target[0]))
             else:
                 target_Q = reward
             #compute the Q value using the main network 
@@ -115,37 +122,45 @@ class CartPoleAgentCont:
         #train the main network
         states = np.array(states)
         targets = np.array(targets)
+        #print(states, targets)
         self.main_network.fit(states, targets, epochs=1, verbose=0)
 
-    def train(self, episodes_num, teacherAgent, feedbackProbability):
+    def train(self, episodes_num, teacherAgent, feedbackProbability, feedbackAccuracy):
         rewards = []
         time_step = 0
 
-        for episode in range(episodes_num):
-            if episode > 0 and episode % 20 == 0:
-                self.update_target()
+        # rerun 5 step at first without recording
+        for episode in range(episodes_num + 5):
+            if episode > 0 and episode % 50 == 0:
                 print(episode)
             state = self.env.reset()
             state = self.preprocess_state(state)
             time_step += 1                
             reward = 0
             for step in range(self.max_steps):
-                action = self.choose_action(state, self.get_epsilon(episode), teacherAgent, feedbackProbability)
+                action = self.choose_action(state, self.get_epsilon(episode), teacherAgent, feedbackProbability, feedbackAccuracy)
                 next_state, r, done, _ = self.env.step(action)
                 next_state = self.preprocess_state(next_state)
                 
-                self.memorize(state, action, reward, next_state, done)
-                state = next_state
                 reward += r
                 if done:
+                    # punish for done
+                    self.memorize(state, action, -1, next_state, done)
+                    self.update_target()
                     break
-            print(reward)
-            rewards.append(reward)  
-            if (np.mean(rewards) < self.training_stop):
+
+                self.memorize(state, action, r, next_state, done)
+                state = next_state
+                
+            if(episode >= 5):
+                rewards.append(reward)  
+                print(reward, self.feedbackAmount)
+            if (np.mean(rewards) < 170):
                 self.updatePolicy()
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
-
+            
+            self.feedbackAmount = 0
   
 
             # avg_reward.append(np.mean(rewards[-100:]))
