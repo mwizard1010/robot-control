@@ -52,9 +52,9 @@ if __name__ == "__main__":
     random.seed(0)   
     
     # Interactive RL
-    print("Interactive Reinforcement learning ")
-    print("Advisor train ... ")
-    trainAgent(agent_num, episodes)
+    # print("Interactive Reinforcement learning ")
+    # print("Advisor train ... ")
+    # trainAgent(agent_num, episodes)
 
     #Sample agent
     agent = CartPoleAgentCont()
@@ -64,8 +64,9 @@ if __name__ == "__main__":
     if(teacherAgent != None):
         # Training with interactive RL
         print('IRL is now training the learner agent with interactive RL')
-        for i in range(3):
-            learnerAgent = trainAgent(1, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i])
+        for i in range(1):
+            learnerAgent = trainAgent(3, episodes, teacherAgent, feedbackProbability[1], feedbackAccuracy[1])
+            learnerAgent = trainAgent(3, episodes, teacherAgent, feedbackProbability[2], feedbackAccuracy[2])
 
     # print("Finish")
 

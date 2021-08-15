@@ -10,6 +10,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.models import Sequential
 
+from agent.PPR import PPR
+
 
 
 class CartPoleAgentCont:
@@ -38,6 +40,8 @@ class CartPoleAgentCont:
         self.main_network = self.build_network()
         self.target_network = self.build_network()
         self.update_target()
+
+        self.policy_reuse = PPR()
     
     def update_target(self):
         self.target_network.set_weights(self.main_network.get_weights())
@@ -74,9 +78,19 @@ class CartPoleAgentCont:
             return np.argmax(self.main_network.predict(state))
 
     def choose_action(self, state, epsilon, teacherAgent = None, feedbackProbability = 0, feedbackAccuracy = 0):
+        self.policy_reuse.step()
         if (np.random.rand() < feedbackProbability):
             #get advice
             trueAction = np.argmax(teacherAgent.main_network.predict(state)[0])
+
+            # PPR: will deploy rulebase to convert states to leaf node with key
+            # now we use states -> state[0]
+            if (state[0][0] > 0):
+                self.policy_reuse.add(0, trueAction)
+            else:
+                self.policy_reuse.add(1, trueAction)
+            # end PPR:
+
             if (np.random.rand() < feedbackAccuracy):
                 action = trueAction
             else:
@@ -85,8 +99,19 @@ class CartPoleAgentCont:
                     if  action != trueAction:
                         break
             self.feedbackAmount += 1
-        else:
-            action = self.normal_action(state, epsilon)
+        else:        
+            #PPR: 
+            if (state[0][0] > 0):
+                redoAction, rate = self.policy_reuse.get(0)
+            else :
+                redoAction, rate = self.policy_reuse.get(1)
+            # print(redoAction, rate)
+            if (np.random.rand() < rate):
+                action = redoAction
+                self.feedbackAmount += 1
+            else:
+            #end PPR:
+                action = self.normal_action(state, epsilon)
         return action
     
 
