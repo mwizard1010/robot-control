@@ -1,2 +1,2 @@
-model_checkpoint_path: "agentIRL0_0.23658_0.47435.npy"
-all_model_checkpoint_paths: "agentIRL0_0.23658_0.47435.npy"
+model_checkpoint_path: "agentIRL2_0.23658_0.47435.npy"
+all_model_checkpoint_paths: "agentIRL2_0.23658_0.47435.npy"
