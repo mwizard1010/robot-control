@@ -4,8 +4,11 @@ import pandas as pd
 import time
 import random
 import math
+import pickle
 from collections import deque
 
+from tensorflow.keras import models
+from sklearn.cluster import KMeans
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.models import Sequential
@@ -39,9 +42,14 @@ class CartPoleAgentCont:
         #model 
         self.main_network = self.build_network()
         self.target_network = self.build_network()
+        self.generalise_model = self.init_gereral_model()
         self.update_target()
 
         self.policy_reuse = PPR()
+
+    def init_gereral_model(self):
+        n_clusters = 3
+        return KMeans(n_clusters=n_clusters, n_init=10)
     
     def update_target(self):
         self.target_network.set_weights(self.main_network.get_weights())
@@ -77,18 +85,30 @@ class CartPoleAgentCont:
         else:
             return np.argmax(self.main_network.predict(state))
 
-    def choose_action(self, state, epsilon, teacherAgent = None, feedbackProbability = 0, feedbackAccuracy = 0):
-        self.policy_reuse.step()
+    def get_group(self, state, teacherAgent):
+        
+        # inp = self.main_network.input
+        # out = self.main_network.layers[0].output
+
+        # tmp_model = models.Model(inp, out)
+        # return np.argmax(tmp_model.predict(input)[0])
+        return teacherAgent.generalise_model.predict(state)[0]
+
+
+    def choose_action(self, state, epsilon, teacherAgent = None, feedbackProbability = 0, feedbackAccuracy = 0, ppl = False):
+        
+        if ppl == True:
+            self.policy_reuse.step()
+
+
         if (np.random.rand() < feedbackProbability):
             #get advice
             trueAction = np.argmax(teacherAgent.main_network.predict(state)[0])
 
-            # PPR: will deploy rulebase to convert states to leaf node with key
-            # now we use states -> state[0]
-            if (state[0][0] > 0):
-                self.policy_reuse.add(0, trueAction)
-            else:
-                self.policy_reuse.add(1, trueAction)
+            # PPR: 
+            if ppl == True:
+                group = self.get_group(state, teacherAgent)
+                self.policy_reuse.add(group, trueAction)
             # end PPR:
 
             if (np.random.rand() < feedbackAccuracy):
@@ -99,19 +119,17 @@ class CartPoleAgentCont:
                     if  action != trueAction:
                         break
             self.feedbackAmount += 1
-        else:        
-            #PPR: 
-            if (state[0][0] > 0):
-                redoAction, rate = self.policy_reuse.get(0)
-            else :
-                redoAction, rate = self.policy_reuse.get(1)
-            # print(redoAction, rate)
-            if (np.random.rand() < rate):
-                action = redoAction
-                self.feedbackAmount += 1
-            else:
+        else:
+            action = self.normal_action(state, epsilon)     
+            #PPR:  
+            if ppl == True:
+                group = self.get_group(state, teacherAgent)
+                redoAction, rate = self.policy_reuse.get(group)
+                # print(redoAction, rate)
+                if (np.random.rand() < rate):
+                    action = redoAction
+                    self.feedbackAmount += 1
             #end PPR:
-                action = self.normal_action(state, epsilon)
         return action
     
 
@@ -126,6 +144,10 @@ class CartPoleAgentCont:
         self.trainNetwork(self.batch_size)
         return 
     
+    def train_generalise_model(self):
+        states = [s[0][0] for s in self.memory]
+        self.generalise_model.fit(states)
+
     def trainNetwork(self, batch_size):
 
         #sample a mini batch of transition from the replay buffer
@@ -150,12 +172,13 @@ class CartPoleAgentCont:
         #print(states, targets)
         self.main_network.fit(states, targets, epochs=1, verbose=0)
 
-    def train(self, episodes_num, teacherAgent, feedbackProbability, feedbackAccuracy):
+    def train(self, episodes_num, teacherAgent, feedbackProbability, feedbackAccuracy, ppl):
         rewards = []
         time_step = 0
 
         # rerun 5 step at first without recording
-        for episode in range(episodes_num + 5):
+        max = episodes_num + 5
+        for episode in range(max):
             if episode > 0 and episode % 50 == 0:
                 print(episode)
             state = self.env.reset()
@@ -163,14 +186,17 @@ class CartPoleAgentCont:
             time_step += 1                
             reward = 0
             for step in range(self.max_steps):
-                action = self.choose_action(state, self.get_epsilon(episode), teacherAgent, feedbackProbability, feedbackAccuracy)
+                action = self.choose_action(state, self.get_epsilon(episode), teacherAgent, feedbackProbability, feedbackAccuracy, ppl)
                 next_state, r, done, _ = self.env.step(action)
                 next_state = self.preprocess_state(next_state)
                 
                 reward += r
                 if done:
-                    # punish for done
-                    self.memorize(state, action, -1, next_state, done)
+                    if (reward < self.max_steps):
+                        # punish for done
+                        self.memorize(state, action, -1, next_state, done)
+                    else :
+                        self.memorize(state, action, 2, next_state, done)
                     self.update_target()
                     break
 
@@ -180,8 +206,8 @@ class CartPoleAgentCont:
             if(episode >= 5):
                 rewards.append(reward)  
                 print(reward, self.feedbackAmount)
-            if (np.mean(rewards) < 170):
-                self.updatePolicy()
+            # if (np.mean(rewards) < 190):
+            self.updatePolicy()
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
             
@@ -193,10 +219,24 @@ class CartPoleAgentCont:
 
     def save(self, filename):
         self.main_network.save_weights(filename)
+        self.save_generalise_model(filename + '_gmodel')
 
     def load(self, filename):
         self.main_network.load_weights(filename)
+        self.load_generalise_model(filename + '_gmodel')
         self.update_target()
+
+    def save_generalise_model(self, filename):
+        # states = self.train_generalise_model()
+        states = [s[0][0] for s in self.memory]
+        with open(filename, "wb") as f:
+            pickle.dump(self.generalise_model, f)
+        with open(filename + 'state', "wb") as f_:
+            pickle.dump(states, f_)
+        
+    def load_generalise_model(self, filename):
+        with open(filename, "rb") as f:
+            self.generalise_model = pickle.load(f)
 
     def test(self, episode = 50):
         rewards = []

@@ -9,6 +9,7 @@ from agent.ContinuousAgent import CartPoleAgentCont
 from util.DataFiles import save
 from util.Agent import select_agent
 import random
+import pickle
 
 
 
@@ -19,7 +20,7 @@ if not os.path.exists(resultsFolder):
     print("Directory " , resultsFolder ,  " Created ")
 
 
-def trainAgent(tries, episodes, teacherAgent=None, feedbackProbability = 0, feedbackAccuracy = 0):
+def trainAgent(tries, episodes, teacherAgent=None, feedbackProbability = 0, feedbackAccuracy = 0, ppl = False):
     if teacherAgent == None:
         filenameFolder = resultsFolder + 'rewardsRL'
     else:
@@ -29,13 +30,13 @@ def trainAgent(tries, episodes, teacherAgent=None, feedbackProbability = 0, feed
         print('Training agent number: ' + str(i+1))
 
         agent = CartPoleAgentCont()
-        rewards = agent.train(episodes, teacherAgent, feedbackProbability, feedbackAccuracy)
+        rewards = agent.train(episodes, teacherAgent, feedbackProbability, feedbackAccuracy, ppl)
         if(teacherAgent is None):
             agentPath = resultsFolder+'/agentRL'+ str(i) + '.npy'
             filenameRewards = filenameFolder + str(i) +'.csv'
         else:
-            agentPath = resultsFolder+'/agentIRL'+ str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) + '.npy'
-            filenameRewards = filenameFolder + str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) +'.csv'
+            agentPath = resultsFolder+'/agentIRL'+ str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) + '_' + str(ppl) + '.npy'
+            filenameRewards = filenameFolder + str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) + '_' + str(ppl) +'.csv'
         agent.save(agentPath)
         save(rewards, filenameRewards)
     return agent
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     episodes = 1000
     feedbackProbability = [1, 0.47316, 0.23658 ]
     feedbackAccuracy = [1, 0.9487, 0.47435]
-    agent_num = 1
+    agent_num = 10
     random.seed(0)   
     
     # Interactive RL
@@ -56,17 +57,20 @@ if __name__ == "__main__":
     # print("Advisor train ... ")
     # trainAgent(agent_num, episodes)
 
-    #Sample agent
+    # Sample agent
     agent = CartPoleAgentCont()
     teacherAgent, number, teacherPath = select_agent(agent, resultsFolder, agent_num)
     print('Using agent:', number, teacherPath)
 
+
     if(teacherAgent != None):
         # Training with interactive RL
         print('IRL is now training the learner agent with interactive RL')
-        for i in range(1):
-            learnerAgent = trainAgent(3, episodes, teacherAgent, feedbackProbability[1], feedbackAccuracy[1])
-            learnerAgent = trainAgent(3, episodes, teacherAgent, feedbackProbability[2], feedbackAccuracy[2])
+        for i in range(3):
+            # trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], False)
+            # trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], True)
+            trainAgent(5, episodes, teacherAgent, feedbackProbability[1], feedbackAccuracy[1], True)
+            trainAgent(5, episodes, teacherAgent, feedbackProbability[2], feedbackAccuracy[2], True)
+            
 
-    # print("Finish")
-
+    print("Finish")

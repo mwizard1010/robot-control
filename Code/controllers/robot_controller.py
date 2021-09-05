@@ -38,15 +38,19 @@ class RobotController:
         self.leftMotor.setPosition(float('inf'))
         self.rightMotor.setPosition(float('inf'))
 
+
         self.rightDistanceSensor = self.robot.getDevice('ds1')
         self.leftDistanceSensor = self.robot.getDevice('ds0')
-        self.gps = self.robot.getDevice('gps')
-        self.touchSensor = self.robot.getDevice('touch_sensor')
-
         self.rightDistanceSensor.enable(self.timestep)
         self.leftDistanceSensor.enable(self.timestep)
+
+        self.gps = self.robot.getDevice('gps')
+        self.touchSensor = self.robot.getDevice('touch_sensor')
         self.gps.enable(self.timestep)
         self.touchSensor.enable(self.timestep)
+
+        self.camera = self.robot.getDevice('camera')
+        self.camera.enable(self.timestep)
 
         self.leftMotor.setVelocity(0)
         self.rightMotor.setVelocity(0)
