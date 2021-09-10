@@ -109,6 +109,7 @@ class CartPoleAgentCont:
             if ppl == True:
                 group = self.get_group(state, teacherAgent)
                 self.policy_reuse.add(group, trueAction)
+
             # end PPR:
 
             if (np.random.rand() < feedbackAccuracy):
@@ -125,7 +126,7 @@ class CartPoleAgentCont:
             if ppl == True:
                 group = self.get_group(state, teacherAgent)
                 redoAction, rate = self.policy_reuse.get(group)
-                # print(redoAction, rate)
+                # print(group, rate)
                 if (np.random.rand() < rate):
                     action = redoAction
                     self.feedbackAmount += 1

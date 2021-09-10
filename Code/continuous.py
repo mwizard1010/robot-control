@@ -66,7 +66,7 @@ if __name__ == "__main__":
     if(teacherAgent != None):
         # Training with interactive RL
         print('IRL is now training the learner agent with interactive RL')
-        for i in range(3):
+        for i in range(1):
             # trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], False)
             # trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], True)
             trainAgent(5, episodes, teacherAgent, feedbackProbability[1], feedbackAccuracy[1], True)
