@@ -30,7 +30,8 @@ def select_agent(agent, agents_folder, agent_num):
         agentsWeights.append(agents_folder + 'agentRL' + str(i) + '.npy')
 
     print(agentsWeights)
-    agent.load(agentsWeights[0])
+    # agent.load(agentsWeights[0])
+    agent.load(agentsWeights[1])
     return agent, 0, agentsWeights[0]
     # for i in range(agent_num):
     #     print('Checking', agentsWeights[i])
