@@ -22,12 +22,12 @@ class CartPoleAgentCont:
     def __init__(self,
             max_steps=200, reward_threshold = 195,
             gamma=0.99, 
-            epsilon=1.0, epsilon_min=0.01, epsilon_log_decay=0.995, 
+            epsilon=1.0, epsilon_min=0.01, epsilon_log_decay=0.99, 
             alpha = 0.01):
         self.env = gym.make("CartPole-v0")
 
         self.memory = deque(maxlen=50000)
-        self.batch_size = 64
+        self.batch_size = 128
         self.max_steps = max_steps
         self.reward_threshold = reward_threshold
         self.alpha = alpha
@@ -46,6 +46,8 @@ class CartPoleAgentCont:
         self.update_target()
 
         self.policy_reuse = PPR()
+
+        
 
     def init_gereral_model(self):
         n_clusters = 3
@@ -77,10 +79,19 @@ class CartPoleAgentCont:
         self.memory.append((state, action, reward, next_state, done))
 
 
-    def normal_action(self, state, epsilon = 0.1):
+    def normal_action(self, state, epsilon = 0.1, teacherAgent = None, ppr = False):
         #exploration
         if np.random.random() <= epsilon:
-            return self.env.action_space.sample()
+            action = self.env.action_space.sample()
+            #PPR:  
+            if ppr == True:
+                group = self.get_group(state, teacherAgent)
+                redoAction, rate = self.policy_reuse.get(group)
+                # print(group, rate)
+                if (np.random.rand() < rate):
+                    action = redoAction
+            #end PPR:
+            return action
         #exploitation
         else:
             return np.argmax(self.main_network.predict(state))
@@ -95,18 +106,17 @@ class CartPoleAgentCont:
         return teacherAgent.generalise_model.predict(state)[0]
 
 
-    def choose_action(self, state, epsilon, teacherAgent = None, feedbackProbability = 0, feedbackAccuracy = 0, ppl = False):
-        
-        if ppl == True:
+    def choose_action(self, state, epsilon, teacherAgent = None, feedbackProbability = 0, feedbackAccuracy = 0, ppr = False):
+                
+        if ppr == True:
             self.policy_reuse.step()
-
 
         if (np.random.rand() < feedbackProbability):
             #get advice
             trueAction = np.argmax(teacherAgent.main_network.predict(state)[0])
 
             # PPR: 
-            if ppl == True:
+            if ppr == True:
                 group = self.get_group(state, teacherAgent)
                 self.policy_reuse.add(group, trueAction)
 
@@ -121,16 +131,7 @@ class CartPoleAgentCont:
                         break
             self.feedbackAmount += 1
         else:
-            action = self.normal_action(state, epsilon)     
-            #PPR:  
-            if ppl == True:
-                group = self.get_group(state, teacherAgent)
-                redoAction, rate = self.policy_reuse.get(group)
-                # print(group, rate)
-                if (np.random.rand() < rate):
-                    action = redoAction
-                    self.feedbackAmount += 1
-            #end PPR:
+            action = self.normal_action(state, epsilon, teacherAgent, ppr)     
         return action
     
 
@@ -173,8 +174,9 @@ class CartPoleAgentCont:
         #print(states, targets)
         self.main_network.fit(states, targets, epochs=1, verbose=0)
 
-    def train(self, episodes_num, teacherAgent, feedbackProbability, feedbackAccuracy, ppl):
+    def train(self, episodes_num, teacherAgent, feedbackProbability, feedbackAccuracy, ppr):
         rewards = []
+        feedbacks = []
         time_step = 0
 
         # rerun 5 step at first without recording
@@ -187,7 +189,7 @@ class CartPoleAgentCont:
             time_step += 1                
             reward = 0
             for step in range(self.max_steps):
-                action = self.choose_action(state, self.get_epsilon(episode), teacherAgent, feedbackProbability, feedbackAccuracy, ppl)
+                action = self.choose_action(state, self.get_epsilon(episode), teacherAgent, feedbackProbability, feedbackAccuracy, ppr)
                 next_state, r, done, _ = self.env.step(action)
                 next_state = self.preprocess_state(next_state)
                 
@@ -200,23 +202,20 @@ class CartPoleAgentCont:
                         self.memorize(state, action, 2, next_state, done)
                     self.update_target()
                     break
-
                 self.memorize(state, action, r, next_state, done)
                 state = next_state
+
                 
             if(episode >= 5):
                 rewards.append(reward)  
+                feedbacks.append(self.feedbackAmount)
                 print(reward, self.feedbackAmount)
-            # if (np.mean(rewards) < 190):
-            self.updatePolicy()
+            # if (np.mean(rewards) < 195):
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
-            
+            self.updatePolicy()
             self.feedbackAmount = 0
-  
-
-            # avg_reward.append(np.mean(rewards[-100:]))
-        return rewards
+        return rewards, feedbacks
 
     def save(self, filename):
         self.main_network.save_weights(filename)

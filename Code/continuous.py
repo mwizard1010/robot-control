@@ -3,6 +3,7 @@
 """
 
 
+from agent.PPR import PPR
 import os
 import gym
 from agent.ContinuousAgent import CartPoleAgentCont
@@ -20,25 +21,25 @@ if not os.path.exists(resultsFolder):
     print("Directory " , resultsFolder ,  " Created ")
 
 
-def trainAgent(tries, episodes, teacherAgent=None, feedbackProbability = 0, feedbackAccuracy = 0, ppl = False):
+def trainAgent(tries, episodes, teacherAgent=None, feedbackProbability = 0, feedbackAccuracy = 0, ppr = False):
     if teacherAgent == None:
-        filenameFolder = resultsFolder + 'rewardsRL'
+        rewardFolder = resultsFolder + 'rewardsRL'
     else:
-        filenameFolder = resultsFolder + 'rewardsIRL'
+        rewardFolder = resultsFolder + 'rewardsIRL'
 
     for i in range(tries):
         print('Training agent number: ' + str(i+1))
 
         agent = CartPoleAgentCont()
-        rewards = agent.train(episodes, teacherAgent, feedbackProbability, feedbackAccuracy, ppl)
+        rewards, feedbacks = agent.train(episodes, teacherAgent, feedbackProbability, feedbackAccuracy, ppr)
         if(teacherAgent is None):
             agentPath = resultsFolder+'/agentRL'+ str(i) + '.npy'
-            filenameRewards = filenameFolder + str(i) +'.csv'
+            filenameRewards = rewardFolder + str(i) +'.csv'
         else:
-            agentPath = resultsFolder+'/agentIRL'+ str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) + '_' + str(ppl) + '.npy'
-            filenameRewards = filenameFolder + str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) + '_' + str(ppl) +'.csv'
+            agentPath = resultsFolder+'/agentIRL'+ str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) + '_' + str(ppr) + '.npy'
+            filenameRewards = rewardFolder + str(i) + '_' + str(feedbackProbability) + '_' + str(feedbackAccuracy) + '_' + str(ppr) +'.csv'
         agent.save(agentPath)
-        save(rewards, filenameRewards)
+        save(rewards, feedbacks, filenameRewards)
     return agent
 
 def trainAdvisor(agent_num):
@@ -46,10 +47,10 @@ def trainAdvisor(agent_num):
     trainAgent(agent_num, episodes)
     
 if __name__ == "__main__":
-    episodes = 1000
+    episodes = 500
     feedbackProbability = [1, 0.47316, 0.23658 ]
     feedbackAccuracy = [1, 0.9487, 0.47435]
-    agent_num = 10
+    agent_num = 5
     random.seed(0)   
     
     # Interactive RL
@@ -66,11 +67,11 @@ if __name__ == "__main__":
     if(teacherAgent != None):
         # Training with interactive RL
         print('IRL is now training the learner agent with interactive RL')
-        for i in range(1):
-            # trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], False)
-            # trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], True)
-            trainAgent(5, episodes, teacherAgent, feedbackProbability[1], feedbackAccuracy[1], True)
-            trainAgent(5, episodes, teacherAgent, feedbackProbability[2], feedbackAccuracy[2], True)
+        for i in range(1,3):
+            trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], False)
+            trainAgent(5, episodes, teacherAgent, feedbackProbability[i], feedbackAccuracy[i], True)
+            # trainAgent(3, episodes, teacherAgent, feedbackProbability[1], feedbackAccuracy[1], True)
+            # trainAgent(5, episodes, teacherAgent, feedbackProbability[2], feedbackAccuracy[2], True)
             
 
-    print("Finish")
+    # print("Finish")
