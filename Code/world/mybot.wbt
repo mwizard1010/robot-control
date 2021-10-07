@@ -1,0 +1,391 @@
+#VRML_SIM R2021b utf8
+WorldInfo {
+  info [
+    "The MyBot robot, the robot used in the tutorial of Webots"
+  ]
+  title "MyBot"
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  orientation 0.9857569385401008 -0.13510427148480184 -0.10015035669736225 4.9936349760953105
+  position 0.04977035897152943 1.6259011125839566 0.6374031800655442
+  followType "None"
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorAppearance Parquetry {
+    type "light strip"
+  }
+}
+DEF GREEN_BOX Solid {
+  translation -0.25 0.05 -0.25
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0 1 0
+        roughness 0.2189099510000001
+        metalness 0
+      }
+      geometry DEF BOX0 Box {
+        size 0.3 0.1 0.1
+      }
+    }
+  ]
+  name "green box"
+  boundingObject Shape {
+    appearance PBRAppearance {
+      roughness 1.1102230246251565e-16
+      metalness 0
+    }
+    geometry USE BOX0
+  }
+}
+DEF BLUE_BOX Solid {
+  translation 0.304313 0.05 0.217979
+  rotation 0 1 0 0.0482053
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 1
+        roughness 0.519341125
+        metalness 0
+      }
+      geometry DEF BOX1 Box {
+        size 0.3 0.1 0.1
+      }
+    }
+  ]
+  name "blue box"
+  boundingObject Shape {
+    appearance PBRAppearance {
+      roughness 1.1102230246251565e-16
+      metalness 0
+    }
+    geometry USE BOX1
+  }
+}
+DEF YELLOW_BOX Solid {
+  translation -0.14067 0.05 0.283697
+  rotation 0 1 0 0.138204
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 1 0
+        roughness 0.03934117200000009
+        metalness 0
+      }
+      geometry DEF BOX2 Box {
+        size 0.05 0.1 0.3
+      }
+    }
+  ]
+  name "yellow box"
+  boundingObject Shape {
+    appearance PBRAppearance {
+      roughness 1.1102230246251565e-16
+      metalness 0
+    }
+    geometry USE BOX2
+  }
+}
+DEF PINK_BOX Solid {
+  translation 0.39 0.05 -0.1
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0.1 0.3
+        roughness 0.16827074099999995
+        metalness 0
+      }
+      geometry DEF BOX3 Box {
+        size 0.15 0.1 0.08
+      }
+    }
+  ]
+  name "red box"
+  boundingObject Shape {
+    appearance PBRAppearance {
+      roughness 1.1102230246251565e-16
+      metalness 0
+    }
+    geometry USE BOX3
+  }
+}
+DEF MY_BOT Robot {
+  children [
+    Transform {
+      translation 0 0.09 0.02
+      rotation -0.5773502691896258 -0.5773502691896258 0.5773502691896258 -2.094395307179586
+      scale 0.2 0.3 0.2
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 1 0 1
+            metalness 0
+          }
+          geometry Capsule {
+            height 0.1
+            radius 0.05
+          }
+        }
+      ]
+    }
+    DEF receiver Receiver {
+    }
+    DEF emitter Emitter {
+    }
+    Group {
+      children [
+        TouchSensor {
+          translation -0.05 0.06 0
+          children [
+            DEF sensor Shape {
+              geometry Sphere {
+                radius 0.0025
+              }
+            }
+          ]
+          name "touch_sensor3"
+          boundingObject USE sensor
+        }
+        TouchSensor {
+          translation 0.05 0.06 0
+          name "touch_sensor2"
+          boundingObject USE sensor
+        }
+        TouchSensor {
+          translation 0 0.06 -0.055
+          name "touch_sensor1"
+          boundingObject USE sensor
+        }
+        TouchSensor {
+          translation 0.03 0.06 -0.05
+          name "touch_sensor4"
+          boundingObject USE sensor
+        }
+        TouchSensor {
+          translation -0.03 0.06 -0.05
+          name "touch_sensor5"
+          boundingObject USE sensor
+        }
+      ]
+    }
+    Camera {
+      translation 0 0.08 -0.05
+      children [
+        Transform {
+          rotation 0.9831056944488314 -0.1294279597735375 -0.1294279597735375 -1.5878353071795859
+          scale 0.1 0.1 0.1
+          children [
+            Shape {
+              appearance PBRAppearance {
+              }
+              geometry Cylinder {
+                height 0.1
+                radius 0.05
+              }
+            }
+          ]
+        }
+      ]
+    }
+    GPS {
+    }
+    Transform {
+      translation 0 0.0415 0
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.0820075 0.364731 0.8
+            roughness 1
+            metalness 0
+          }
+          geometry DEF BODY Cylinder {
+            height 0.08
+            radius 0.045
+          }
+        }
+      ]
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 113.91360000000077
+        axis -1 0 0
+        anchor -0.045 0.025 0
+      }
+      device [
+        RotationalMotor {
+          name "left wheel motor"
+          maxVelocity 11
+        }
+        PositionSensor {
+          name "left wheel sensor"
+        }
+      ]
+      endPoint Solid {
+        translation -0.045 0.025 0
+        rotation -1 0 0 0.8162644707682131
+        children [
+          DEF WHEEL Transform {
+            rotation 0 0 1 1.5707963267948968
+            children [
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 1 0 0
+                  roughness 1
+                  metalness 0
+                }
+                geometry Cylinder {
+                  height 0.01
+                  radius 0.025
+                }
+              }
+            ]
+          }
+        ]
+        name "left wheel"
+        boundingObject USE WHEEL
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 113.91360000000077
+        axis -1 0 0
+        anchor 0.045 0.025 0
+      }
+      device [
+        RotationalMotor {
+          name "right wheel motor"
+          maxVelocity 11
+        }
+        PositionSensor {
+          name "right wheel sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.045 0.025 0
+        rotation -1 0 0 0.8162644707682131
+        children [
+          USE WHEEL
+        ]
+        name "right wheel"
+        boundingObject USE WHEEL
+      }
+    }
+    DistanceSensor {
+      translation -0.02 0.063 -0.042
+      rotation 0 1 0 2.07
+      children [
+        DEF SENSOR Transform {
+          translation 3.17068e-09 1.37107e-10 0
+          rotation 0 0 1 1.57
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.975691 0.981481 0.0252992
+                roughness 1
+                metalness 0
+              }
+              geometry Cylinder {
+                height 0.004
+                radius 0.008
+              }
+            }
+          ]
+        }
+      ]
+      name "ds0"
+      lookupTable [
+        0 1024 0
+        0.05 1024 0
+        0.15 0 0
+      ]
+      numberOfRays 2
+      aperture 1
+    }
+    DistanceSensor {
+      translation 0.02 0.063 -0.042
+      rotation 0 1 0 1.07
+      children [
+        USE SENSOR
+      ]
+      name "ds1"
+      lookupTable [
+        0 1024 0
+        0.05 1024 0
+        0.15 0 0
+      ]
+      numberOfRays 2
+      aperture 1
+    }
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.8 0.8
+        baseColorMap ImageTexture {
+          url [
+            "https://raw.githubusercontent.com/cyberbotics/webots/R2021b/projects/samples/mybot/worlds/textures/mybot.png"
+          ]
+        }
+        roughness 0.5
+        metalness 0
+      }
+      geometry IndexedFaceSet {
+        coord Coordinate {
+          point [
+            0.015 0.038 -0.041
+            0.015 0.023 -0.041
+            0 0.023 -0.0455
+            -0.015 0.023 -0.041
+            -0.015 0.038 -0.041
+            0 0.038 -0.0455
+          ]
+        }
+        texCoord TextureCoordinate {
+          point [
+            0 0
+            0.5 0
+            1 0
+            1 1
+            0.5 1
+            0 1
+          ]
+        }
+        coordIndex [
+          0, 1, 2, 5, -1, 5, 2, 3, 4, -1
+        ]
+        texCoordIndex [
+          5, 0, 1, 4, -1, 4, 1, 2, 3, -1
+        ]
+        creaseAngle 0.9
+      }
+    }
+  ]
+  name "MyBot"
+  boundingObject Transform {
+    translation 0 0.0415 0
+    children [
+      USE BODY
+    ]
+  }
+  controller "my_controller"
+  supervisor TRUE
+}
+DEF SUPER Robot {
+  translation 0 0.14 0
+  children [
+    DEF camera Camera {
+      translation 0 1.1 0
+      rotation 1 0 0 -1.5707953071795862
+    }
+    DEF emitter Emitter {
+    }
+    DEF receiver Receiver {
+    }
+  ]
+  name "Supervisor"
+  controller "<extern>"
+  supervisor TRUE
+}
